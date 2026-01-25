@@ -1,13 +1,12 @@
 from piccolo.table import Table
-from piccolo.columns import Varchar, Timestamp, Boolean, Text
+from piccolo.columns import Varchar, Timestamp, Boolean, Text, Serial
 from datetime import datetime
 
-class User(Table):
+class User(Table, tablename="users"):
     """
     User model for authentication and profile management.
     """
-    class Meta:
-        tablename = "users"
+    id = Serial(primary_key=True)
     username = Varchar(length=50, unique=True, index=True)
     email = Varchar(length=255, unique=True, index=True)
     password_hash = Varchar(length=255)

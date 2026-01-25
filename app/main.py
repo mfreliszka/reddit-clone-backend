@@ -2,6 +2,8 @@ from litestar.openapi import OpenAPIConfig
 from litestar import Litestar
 from piccolo.engine import engine_finder
 from app.controllers.user import UserController
+from app.controllers.subreddit import SubredditController
+from app.controllers.post import PostController
 from litestar.openapi.plugins import SwaggerRenderPlugin, StoplightRenderPlugin
 
 # Piccolo connection management
@@ -25,7 +27,7 @@ api_config = OpenAPIConfig(
 )
 
 app = Litestar(
-    route_handlers=[UserController],
+    route_handlers=[UserController, SubredditController, PostController],
     on_startup=[on_startup],
     on_shutdown=[on_shutdown],
     debug=True,
