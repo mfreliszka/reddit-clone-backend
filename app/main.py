@@ -6,11 +6,13 @@ from app.controllers.subreddit import SubredditController
 from app.controllers.post import PostController
 from litestar.openapi.plugins import SwaggerRenderPlugin, StoplightRenderPlugin
 
+
 # Piccolo connection management
 async def on_startup():
     engine = engine_finder()
     if engine:
         await engine.start_connection_pool()
+
 
 async def on_shutdown():
     engine = engine_finder()

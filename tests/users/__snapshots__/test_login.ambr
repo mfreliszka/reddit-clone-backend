@@ -1,0 +1,15 @@
+# serializer version: 1
+# name: test_login_user
+  dict({
+    'token_type': 'Bearer',
+    'user': dict({
+      'avatar_url': None,
+      'bio': None,
+      'email': 'user_d81e5b75@example.com',
+      'id': 59,
+      'is_active': True,
+      'is_verified': False,
+      'username': 'user_d81e5b75',
+    }),
+  })
+# ---

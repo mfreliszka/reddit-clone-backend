@@ -43,19 +43,13 @@ DESCRIPTION = ""
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="app", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="app", description=DESCRIPTION)
 
-    manager.add_table(
-        class_name="Post", tablename="post", schema=None, columns=None
-    )
+    manager.add_table(class_name="Post", tablename="post", schema=None, columns=None)
 
     manager.add_table(
         class_name="Subreddit", tablename="subreddit", schema=None, columns=None
     )
-
-
 
     manager.add_column(
         table_class_name="Post",
@@ -318,7 +312,5 @@ async def forwards():
         },
         schema=None,
     )
-
-
 
     return manager

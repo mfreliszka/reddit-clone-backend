@@ -1,0 +1,8 @@
+# serializer version: 1
+# name: test_get_post
+  dict({
+    'content': 'Content here',
+    'title': 'Post to Get',
+    'url': None,
+  })
+# ---

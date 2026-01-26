@@ -5,15 +5,27 @@ from litestar.exceptions import NotFoundException, NotAuthorizedException
 from app.services.subreddit_service import SubredditService
 from app.dtos.subreddit import SubredditCreateDTO, SubredditResponseDTO
 
+
+
+def provide_subreddit_service() -> SubredditService:
+    return SubredditService()
+
+
 class SubredditController(Controller):
     """
     Controller for handling subreddit-related operations.
     """
+
     path = "/api/subreddits"
-    dependencies = {"subreddit_service": Provide(SubredditService)}
+    dependencies = {"subreddit_service": Provide(lambda: provide_subreddit_service())}
 
     @post("/")
-    async def create_subreddit(self, data: SubredditCreateDTO, request: Request, subreddit_service: SubredditService) -> SubredditResponseDTO:
+    async def create_subreddit(
+        self,
+        data: SubredditCreateDTO,
+        request: Request,
+        subreddit_service: SubredditService,
+    ) -> SubredditResponseDTO:
         """
         Create a new subreddit.
 
@@ -24,7 +36,7 @@ class SubredditController(Controller):
 
         Returns:
             SubredditResponseDTO: The created subreddit.
-        
+
         Raises:
             NotAuthorizedException: If the user is not authenticated.
         """
@@ -35,7 +47,9 @@ class SubredditController(Controller):
         return await subreddit_service.create_subreddit(data, owner_id=int(user["id"]))
 
     @get("/")
-    async def get_all_subreddits(self, subreddit_service: SubredditService) -> list[SubredditResponseDTO]:
+    async def get_all_subreddits(
+        self, subreddit_service: SubredditService
+    ) -> list[SubredditResponseDTO]:
         """
         List all subreddits.
 
@@ -48,7 +62,9 @@ class SubredditController(Controller):
         return await subreddit_service.get_all()
 
     @get("/{name:str}")
-    async def get_subreddit(self, name: str, subreddit_service: SubredditService) -> SubredditResponseDTO:
+    async def get_subreddit(
+        self, name: str, subreddit_service: SubredditService
+    ) -> SubredditResponseDTO:
         """
         Get a specific subreddit by name.
 

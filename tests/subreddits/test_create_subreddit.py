@@ -1,63 +1,64 @@
 import pytest
-from syrupy.assertion import SnapshotAssertion
+from http import HTTPStatus
+from unittest.mock import AsyncMock
+from polyfactory.factories.msgspec_factory import MsgspecFactory
+from app.services.subreddit_service import SubredditService
+from app.dtos.subreddit import SubredditCreateDTO, SubredditResponseDTO
+
+class SubredditCreateDTOFactory(MsgspecFactory[SubredditCreateDTO]):
+    pass
+
+class SubredditResponseDTOFactory(MsgspecFactory[SubredditResponseDTO]):
+    pass
 
 @pytest.mark.asyncio
-async def test_create_subreddit(client, unique_username, unique_email, snapshot: SnapshotAssertion):
-    # Register & Login
-    await client.post("/api/users/register", json={
-        "username": unique_username,
-        "email": unique_email,
-        "password": "password123"
-    })
-    login_res = await client.post("/api/users/login", json={
-        "username": unique_username,
-        "password": "password123"
-    })
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-
-    # Create Subreddit
-    sub_name = f"sub_{unique_username}"
-    response = await client.post("/api/subreddits/", json={
-        "name": sub_name,
-        "description": "A test subreddit"
-    }, headers=headers)
-
-    assert response.status_code == 201
+async def test_create_subreddit(client, mocker, mock_auth):
+    # Data
+    payload = SubredditCreateDTOFactory.build()
+    expected_response = SubredditResponseDTOFactory.build(name=payload.name, description=payload.description)
+    
+    # Mock Service
+    mock_service_instance = AsyncMock(spec=SubredditService)
+    mock_service_instance.create_subreddit.return_value = expected_response
+    
+    mocker.patch("app.controllers.subreddit.provide_subreddit_service", return_value=mock_service_instance)
+    
+    # Execute
+    token = "valid_token"
+    response = await client.post(
+        "/api/subreddits/",
+        json={"name": payload.name, "description": payload.description},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    
+    assert response.status_code == HTTPStatus.CREATED
     data = response.json()
-    assert data["name"] == sub_name
-    assert "id" in data
+    assert data["name"] == payload.name
     
-    # Verify strict typing did not break logic
-    assert isinstance(data["id"], int)
+    # Verify Service Call
+    mock_service_instance.create_subreddit.assert_called_once()
+    # verify owner_id=1
+
 
 @pytest.mark.asyncio
-async def test_create_duplicate_subreddit(client, unique_username, unique_email):
-    # Register & Login
-    await client.post("/api/users/register", json={
-        "username": unique_username,
-        "email": unique_email,
-        "password": "password123"
-    })
-    login_res = await client.post("/api/users/login", json={
-        "username": unique_username,
-        "password": "password123"
-    })
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-
-    sub_name = f"sub_{unique_username}"
+async def test_create_duplicate_subreddit(client, mocker, mock_auth):
+    from litestar.exceptions import ClientException
     
-    # First creation
-    await client.post("/api/subreddits/", json={
-        "name": sub_name,
-        "description": "Original"
-    }, headers=headers)
-
-    # Duplicate creation
-    response = await client.post("/api/subreddits/", json={
-        "name": sub_name,
-        "description": "Duplicate"
-    }, headers=headers)
-
-    assert response.status_code == 400
+    # Data
+    payload = SubredditCreateDTOFactory.build()
+    
+    # Mock Service Error
+    mock_service_instance = AsyncMock(spec=SubredditService)
+    mock_service_instance.create_subreddit.side_effect = ClientException("Subreddit already exists")
+    
+    mocker.patch("app.controllers.subreddit.provide_subreddit_service", return_value=mock_service_instance)
+    
+    # Execute
+    token = "valid_token"
+    response = await client.post(
+        "/api/subreddits/",
+        json={"name": payload.name, "description": payload.description},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    
+    assert response.status_code == HTTPStatus.BAD_REQUEST

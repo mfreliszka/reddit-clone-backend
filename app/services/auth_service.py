@@ -8,11 +8,13 @@ ph = PasswordHasher()
 SECRET_KEY = "super-secret-key-change-me"  # TODO: Move to env var
 ALGORITHM = "HS256"
 
+
 class AuthService:
     """
     Service for handling authentication-related security operations including
     password hashing (Argon2) and JWT token management.
     """
+
     def hash_password(self, password: str) -> str:
         """
         Hash a plaintext password using Argon2.
@@ -66,7 +68,8 @@ class AuthService:
         """
         payload: dict[str, str | float | int | datetime.datetime] = {
             "sub": str(user_id),
-            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24),
+            "exp": datetime.datetime.now(datetime.timezone.utc)
+            + datetime.timedelta(hours=24),
             "iat": datetime.datetime.now(datetime.timezone.utc),
         }
         return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -82,7 +85,9 @@ class AuthService:
             int | None: The user ID from the token subject if valid, None otherwise.
         """
         try:
-            payload: dict[str, str | float | int] = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            payload: dict[str, str | float | int] = jwt.decode(
+                token, SECRET_KEY, algorithms=[ALGORITHM]
+            )
             return int(payload["sub"])
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
             return None

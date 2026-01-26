@@ -1,0 +1,8 @@
+# serializer version: 1
+# name: test_create_post
+  dict({
+    'content': 'This is the content',
+    'title': 'My first post',
+    'url': None,
+  })
+# ---

@@ -1,0 +1,9 @@
+# serializer version: 1
+# name: test_get_me_authenticated
+  dict({
+    'avatar_url': None,
+    'bio': None,
+    'is_active': True,
+    'is_verified': False,
+  })
+# ---

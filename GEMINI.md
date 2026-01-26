@@ -53,6 +53,21 @@ Follow these rules strictly when interacting with this codebase:
 * Document any performance bottlenecks or common student pitfalls in a specialized `COURSE_NOTES.md`.
 * Maintain a list of specific Neon-Postgres quirks (e.g., connection string SNI requirements) for troubleshooting.
 
+5. **Testing:**
+* each endpoint should have a corresponding test file in the `tests` directory.
+* each endpoint should be covered by at least one test, ideally multiple tests.
+* each test file should cover the happy path and at least one edge case.
+* each test should rely on mocked data, mocked functions and mocked database
+* each test file should be able to run in isolation.
+* each test file should be able to run in parallel.
+* each endpoint test should be using syrupy snapshot assertion - something like this:
+```python
+assert response.json() == snapshot
+```
+* each endpoint test should have expected status code check:
+```python
+assert response.status_code == HTTPStatus.OK
+```
 
 
 ---

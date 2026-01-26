@@ -1,0 +1,8 @@
+# serializer version: 1
+# name: test_list_posts_in_subreddit
+  dict({
+    'content': None,
+    'title': 'Post 2',
+    'url': None,
+  })
+# ---

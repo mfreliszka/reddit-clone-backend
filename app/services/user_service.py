@@ -3,14 +3,20 @@ from app.services.auth_service import AuthService
 from app.dtos.auth import UserLoginResponseDTO
 from app.models.user import User
 from app.dtos.user import UserRegisterDTO, UserLoginDTO, UserResponseDTO
-from litestar.exceptions import ClientException, NotFoundException, PermissionDeniedException
+from litestar.exceptions import (
+    ClientException,
+    NotFoundException,
+    PermissionDeniedException,
+)
 
 auth_service = AuthService()
+
 
 class UserService:
     """
     Service for handling user business logic including creation, authentication, and retrieval.
     """
+
     async def create_user(self, data: UserRegisterDTO) -> UserResponseDTO:
         """
         Create a new user in the database.
@@ -24,9 +30,11 @@ class UserService:
         Raises:
             ClientException: If the username or email already exists.
         """
-        existing_user: dict[str, str | int | bool | datetime | None] | None = await User.select().where(
-            (User.username == data.username) | (User.email == data.email)
-        ).first()
+        existing_user: dict[str, str | int | bool | datetime | None] | None = (
+            await User.select()
+            .where((User.username == data.username) | (User.email == data.email))
+            .first()
+        )
 
         if existing_user:
             raise ClientException("Username or email already exists")
@@ -66,19 +74,23 @@ class UserService:
             NotFoundException: If the username is not found.
             PermissionDeniedException: If the password is incorrect.
         """
-        user: dict[str, str | int | bool | datetime | None] | None = await User.select().where(User.username == data.username).first()
+        user: dict[str, str | int | bool | datetime | None] | None = (
+            await User.select().where(User.username == data.username).first()
+        )
         if not user:
             raise NotFoundException("User not found")
 
         if not auth_service.verify_password(user["password_hash"], data.password):
             raise PermissionDeniedException("Invalid password")
-            
+
         if auth_service.needs_rehash(user["password_hash"]):
             new_hash: str = auth_service.hash_password(data.password)
-            await User.update({User.password_hash: new_hash}).where(User.id == user["id"])
+            await User.update({User.password_hash: new_hash}).where(
+                User.id == user["id"]
+            )
 
         token: str = auth_service.create_token(user["id"])
-        
+
         user_dto: UserResponseDTO = UserResponseDTO(
             id=user["id"],
             username=user["username"],
@@ -90,7 +102,5 @@ class UserService:
         )
 
         return UserLoginResponseDTO(
-            access_token=token,
-            token_type="Bearer",
-            user=user_dto
+            access_token=token, token_type="Bearer", user=user_dto
         )

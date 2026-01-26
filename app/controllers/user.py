@@ -7,15 +7,23 @@ from app.dtos.auth import UserLoginResponseDTO
 from app.services.user_service import UserService
 from app.models.user import User
 
+
+
+def provide_user_service() -> UserService:
+    return UserService()
+
 class UserController(Controller):
     """
     Controller for handling user-related operations such as registration, login, and profile retrieval.
     """
+
     path = "/api/users"
-    dependencies = {"user_service": Provide(UserService)}
+    dependencies = {"user_service": Provide(lambda: provide_user_service())}
 
     @post("/register")
-    async def register(self, data: UserRegisterDTO, user_service: UserService) -> UserResponseDTO:
+    async def register(
+        self, data: UserRegisterDTO, user_service: UserService
+    ) -> UserResponseDTO:
         """
         Register a new user.
 
@@ -29,7 +37,9 @@ class UserController(Controller):
         return await user_service.create_user(data)
 
     @post("/login")
-    async def login(self, data: UserLoginDTO, user_service: UserService) -> UserLoginResponseDTO:
+    async def login(
+        self, data: UserLoginDTO, user_service: UserService
+    ) -> UserLoginResponseDTO:
         """
         Authenticate a user and return a JWT token.
 
@@ -59,7 +69,7 @@ class UserController(Controller):
         user: dict[str, str | int | bool | datetime | None] | None = request.user
         if not user:
             raise NotAuthorizedException()
-            
+
         return UserResponseDTO(
             id=user["id"],
             username=user["username"],
@@ -84,10 +94,12 @@ class UserController(Controller):
         Raises:
             NotFoundException: If the user does not exist.
         """
-        user: dict[str, str | int | bool | datetime | None] | None = await User.select().where(User.username == username).first()
+        user: dict[str, str | int | bool | datetime | None] | None = (
+            await User.select().where(User.username == username).first()
+        )
         if not user:
             raise NotFoundException("User not found")
-        
+
         return UserResponseDTO(
             id=user["id"],
             username=user["username"],

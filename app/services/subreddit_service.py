@@ -3,11 +3,15 @@ from litestar.exceptions import ClientException, NotFoundException
 from app.models.subreddit import Subreddit
 from app.dtos.subreddit import SubredditCreateDTO, SubredditResponseDTO
 
+
 class SubredditService:
     """
     Service for handling subreddit operations.
     """
-    async def create_subreddit(self, data: SubredditCreateDTO, owner_id: int) -> SubredditResponseDTO:
+
+    async def create_subreddit(
+        self, data: SubredditCreateDTO, owner_id: int
+    ) -> SubredditResponseDTO:
         """
         Create a new subreddit.
 
@@ -21,14 +25,14 @@ class SubredditService:
         Raises:
             ClientException: If the subreddit name already exists.
         """
-        existing: dict[str, Any] | None = await Subreddit.select().where(Subreddit.name == data.name).first()
+        existing: dict[str, Any] | None = (
+            await Subreddit.select().where(Subreddit.name == data.name).first()
+        )
         if existing:
             raise ClientException(f"Subreddit '{data.name}' already exists")
 
         new_sub: Subreddit = Subreddit(
-            name=data.name,
-            description=data.description,
-            owner=owner_id
+            name=data.name, description=data.description, owner=owner_id
         )
         await new_sub.save()
 
@@ -37,7 +41,7 @@ class SubredditService:
             name=new_sub.name,
             description=new_sub.description,
             created_at=new_sub.created_at,
-            owner_id=new_sub.owner
+            owner_id=new_sub.owner,
         )
 
     async def get_all(self) -> list[SubredditResponseDTO]:
@@ -47,15 +51,18 @@ class SubredditService:
         Returns:
             list[SubredditResponseDTO]: A list of all subreddits.
         """
-        subreddits: list[dict[str, Any]] = await Subreddit.select().order_by(Subreddit.name)
+        subreddits: list[dict[str, Any]] = await Subreddit.select().order_by(
+            Subreddit.name
+        )
         return [
             SubredditResponseDTO(
                 id=sub["id"],
                 name=sub["name"],
                 description=sub["description"],
                 created_at=sub["created_at"],
-                owner_id=sub["owner"]
-            ) for sub in subreddits
+                owner_id=sub["owner"],
+            )
+            for sub in subreddits
         ]
 
     async def get_by_name(self, name: str) -> SubredditResponseDTO:
@@ -71,7 +78,9 @@ class SubredditService:
         Raises:
             NotFoundException: If the subreddit does not exist.
         """
-        sub: dict[str, Any] | None = await Subreddit.select().where(Subreddit.name == name).first()
+        sub: dict[str, Any] | None = (
+            await Subreddit.select().where(Subreddit.name == name).first()
+        )
         if not sub:
             raise NotFoundException(f"Subreddit '{name}' not found")
 
@@ -80,5 +89,5 @@ class SubredditService:
             name=sub["name"],
             description=sub["description"],
             created_at=sub["created_at"],
-            owner_id=sub["owner"]
+            owner_id=sub["owner"],
         )

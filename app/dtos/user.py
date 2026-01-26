@@ -8,9 +8,11 @@ class UserRegisterDTO(Struct):
     avatar_url: str | None = None
     bio: str | None = None
 
+
 class UserLoginDTO(Struct):
     username: str
     password: str
+
 
 class UserResponseDTO(Struct):
     id: int

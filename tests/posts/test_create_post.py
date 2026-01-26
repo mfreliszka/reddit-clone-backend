@@ -1,70 +1,50 @@
 import pytest
-from syrupy.assertion import SnapshotAssertion
+from http import HTTPStatus
+from unittest.mock import AsyncMock
+from polyfactory.factories.msgspec_factory import MsgspecFactory
+from app.services.post_service import PostService
+from app.dtos.post import PostCreateDTO, PostResponseDTO
+
+class PostCreateDTOFactory(MsgspecFactory[PostCreateDTO]):
+    pass
+
+class PostResponseDTOFactory(MsgspecFactory[PostResponseDTO]):
+    pass
 
 @pytest.mark.asyncio
-async def test_create_post(client, unique_username, unique_email, snapshot: SnapshotAssertion):
-    # Setup: Register, Login, Create Subreddit
-    await client.post("/api/users/register", json={
-        "username": unique_username,
-        "email": unique_email,
-        "password": "password123"
-    })
-    login_res = await client.post("/api/users/login", json={
-        "username": unique_username,
-        "password": "password123"
-    })
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+async def test_create_post(client, mocker, mock_auth):
+    # Data
+    payload = PostCreateDTOFactory.build()
+    expected_response = PostResponseDTOFactory.build(
+        title=payload.title, 
+        content=payload.content,
+        subreddit_id=1
+    )
     
-    sub_name = f"sub_{unique_username}"
-    await client.post("/api/subreddits/", json={"name": sub_name, "description": "Test Sub"}, headers=headers)
-
-    # Create Post
-    response = await client.post(f"/api/r/{sub_name}/posts", json={
-        "title": "My first post",
-        "subreddit_name": sub_name,
-        "content": "This is the content"
-    }, headers=headers)
-
-    assert response.status_code == 201
-    data = response.json()
-    assert data["title"] == "My first post"
-    assert data["content"] == "This is the content"
-    assert "id" in data
-    assert isinstance(data["id"], int)
-
-    # Verify retrieval
-    post_id = data["id"]
-    get_res = await client.get(f"/api/posts/{post_id}")
-    assert get_res.status_code == 200
-    assert get_res.json()["title"] == "My first post"
-
-@pytest.mark.asyncio
-async def test_list_posts(client, unique_username, unique_email):
-    # Setup
-    await client.post("/api/users/register", json={
-        "username": unique_username,
-        "email": unique_email,
-        "password": "password123"
-    })
-    login_res = await client.post("/api/users/login", json={
-        "username": unique_username,
-        "password": "password123"
-    })
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    # Mock
+    mock_service_instance = AsyncMock(spec=PostService)
+    mock_service_instance.create_post.return_value = expected_response
     
-    sub_name = f"sub_{unique_username}_list"
-    await client.post("/api/subreddits/", json={"name": sub_name, "description": "Test List"}, headers=headers)
-
-    # Create 2 posts
-    await client.post(f"/api/r/{sub_name}/posts", json={"title": "Post 1", "subreddit_name": sub_name}, headers=headers)
-    await client.post(f"/api/r/{sub_name}/posts", json={"title": "Post 2", "subreddit_name": sub_name}, headers=headers)
-
-    # List
-    response = await client.get(f"/api/r/{sub_name}/posts")
-    assert response.status_code == 200
+    mocker.patch("app.controllers.post.provide_post_service", return_value=mock_service_instance)
+    
+    # Execute
+    token = "valid_token"
+    sub_name = payload.subreddit_name
+    
+    response = await client.post(
+        f"/api/r/{sub_name}/posts",
+        json={
+            "title": payload.title,
+            "subreddit_name": payload.subreddit_name,
+            "content": payload.content,
+            "url": payload.url
+        },
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    
+    assert response.status_code == HTTPStatus.CREATED
     data = response.json()
-    assert len(data) == 2
-    assert data[0]["title"] == "Post 2" # Ordered by created_at desc
-    assert data[1]["title"] == "Post 1"
+    assert data["title"] == payload.title
+    
+    # Verify Service Call
+    mock_service_instance.create_post.assert_called_once()

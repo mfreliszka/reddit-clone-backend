@@ -1,0 +1,6 @@
+# serializer version: 1
+# name: test_list_subreddits
+  dict({
+    'description': 'Test list',
+  })
+# ---

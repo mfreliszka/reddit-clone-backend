@@ -4,10 +4,12 @@ from datetime import datetime
 from app.models.user import User
 from app.models.subreddit import Subreddit
 
+
 class Post(Table):
     """
     Model representing a user submission (post) to a subreddit.
     """
+
     id = Serial(primary_key=True)
     title = Varchar(length=300)
     content = Text(null=True)
