@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_get_user_profile
+  dict({
+    'avatar_url': None,
+    'bio': None,
+    'email': 'user_8e578729@example.com',
+    'is_active': True,
+    'is_verified': False,
+  })
+# ---

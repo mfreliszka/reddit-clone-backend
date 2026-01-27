@@ -1,0 +1,6 @@
+# serializer version: 1
+# name: test_create_subreddit
+  dict({
+    'description': 'A test subreddit',
+  })
+# ---

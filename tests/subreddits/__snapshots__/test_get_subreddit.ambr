@@ -1,0 +1,6 @@
+# serializer version: 1
+# name: test_get_subreddit_by_name
+  dict({
+    'description': 'Get test',
+  })
+# ---
